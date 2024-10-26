@@ -1,0 +1,8 @@
+feedparser
+requests
+lxml
+rfeed
+pytz
+PyGithub
+schedule
+fake-useragent

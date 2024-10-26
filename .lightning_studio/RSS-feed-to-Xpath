@@ -1,0 +1,171 @@
+import feedparser
+import requests
+from lxml import html
+import logging
+import time
+import logging
+import feedparser
+import requests
+from lxml import html
+from typing import List, Dict, Any
+from datetime import datetime
+import pytz
+import random
+
+from rfeed import Item, Feed
+from github import Github, GithubException
+import os
+from typing import List, Dict, Any
+import schedule
+# Constants
+SCRAPED_FILENAME = "scraped_xml_feed.xml"
+FINAL_MERGE_FILENAME = "final_merged_feed.xml"
+REPO_NAME = "Offren/RSS-feed-to-Xpath"
+MAX_RUNTIME_HOURS = 24  # Maximum runtime in hours
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# List of common user agents
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.101 Safari/537.36'
+]
+
+def get_headers():
+    # Add your implementation here
+    pass
+
+def process_feed(feed_config):
+    # Add your implementation here
+    pass
+
+def parse_existing_xml(filename):
+    # Add your implementation here
+    pass
+
+def create_merged_rss_feed(results, title, description, link, existing_items):
+    # Add your implementation here
+    pass
+
+def merge_all_feeds(scraped_filename, final_merge_filename):
+    # Add your implementation here
+    pass
+
+def upload_to_github(github_token, repo_name, filename, content):
+    # Add your implementation here
+    pass
+
+def job():
+    all_results = []
+    feeds = [
+        {
+            'rss_url': "https://www.real.discount/rss",
+            'xpath': "/html/body/div[2]/div/div[2]/div[3]/div[2]/a/@href",
+            'title': "Extracted real.discount Udemy Courses",
+            'description': "A feed of 100% Off Udemy Courses from real.discount",
+            'link': "https://www.real.discount/",
+            'max_entries': 5
+        },
+        {
+            'rss_url': "https://politepol.com/fd/XGgtG8T9dC1d.xml",
+            'xpath': "/html/body/main/div[4]/div/div[3]/div/a/@href",
+            'title': "Extracted scrollcoupons Udemy Courses",
+            'description': "A feed of 100% Off Udemy Courses from scrollcoupons",
+            'link': "https://www.scrollcoupons.com/",
+            'max_entries': 5
+        },
+        {
+            'rss_url': "https://politepol.com/fd/dDI6e3Dkp93h.xml",
+            'xpath': "//a[contains(@class, 'btn_offer_block')]/@href",
+            'title': "Extracted onlinecourses.ooo Udemy Courses",
+            'description': "A feed of 100% Off Udemy Courses from onlinecourses.ooo",
+            'link': "https://onlinecourses.ooo/",
+            'max_entries': 5
+        },
+        {
+            'rss_url': "https://politepol.com/fd/WjDGnyuwpgJo.xml",
+            'xpath': "/html/body/div[1]/div/div/div[1]/div/div/div[3]/div/a/@href",
+            'title': "Extracted udemyfreebies.com Udemy Courses",
+            'description': "A feed of 100% Off Udemy Courses from udemyfreebies.com",
+            'link': "https://udemyfreebies.com/",
+            'max_entries': 5
+        },
+        {
+            'rss_url': "https://politepol.com/fd/k54boRNn7Kxi.xml",
+            'xpath': "//*[@id='enroll']/a/@href",
+            'title': "Extracted infognu.com Udemy Courses",
+            'description': "A feed of 100% Off Udemy Courses from infognu.com",
+            'link': "https://infognu.com/",
+            'max_entries': 5
+        },
+    ]
+    for feed_config in feeds:
+        results = process_feed(feed_config)
+        if results is not None:
+            all_results.extend(results)
+
+    if all_results:
+        existing_items = parse_existing_xml(SCRAPED_FILENAME)
+
+        scraped_xml_feed = create_merged_rss_feed(
+            all_results,
+            "Merged RSS Feed",
+            "A merged feed containing items from multiple sources",
+            "https://example.com/merged-feed",
+            existing_items
+        )
+
+        github_token = os.environ.get("GITHUB_TOKEN")
+
+        if scraped_xml_feed is None:
+            scraped_xml_feed = ""
+
+        with open(SCRAPED_FILENAME, "w", encoding="utf-8") as f:
+            f.write(scraped_xml_feed)
+
+        logging.info(f"Scraped RSS feed updated and saved as '{SCRAPED_FILENAME}'")
+
+        final_merged_feed = merge_all_feeds(SCRAPED_FILENAME, FINAL_MERGE_FILENAME)
+        logging.info(f"Final merged RSS feed created and saved as '{FINAL_MERGE_FILENAME}'")
+
+        upload_to_github(github_token, REPO_NAME, SCRAPED_FILENAME, scraped_xml_feed)
+        upload_to_github(github_token, REPO_NAME, FINAL_MERGE_FILENAME, final_merged_feed)
+
+    else:
+        logging.warning("No matching content found in any of the processed feeds")
+
+def main():
+    logging.info("Starting content extraction process for multiple feeds")
+
+    github_token = os.environ.get("GITHUB_TOKEN")
+    if not github_token:
+        logging.error("GITHUB_TOKEN is not set in the environment")
+        return
+
+    logging.warning("No matching content found in any of the processed feeds")
+
+    # Run the job immediately when the script starts
+    job()
+
+    # Schedule the job to run every 5 minutes
+    schedule.every(5).minutes.do(job)
+
+    logging.info("Script scheduled to run every 5 minutes")
+
+    # Keep the script running with a maximum runtime
+    start_time = time.time()
+    while True:
+        schedule.run_pending()
+        time.sleep(5)
+        
+        # Check if the maximum runtime has been exceeded
+        if time.time() - start_time > MAX_RUNTIME_HOURS * 3600:
+            logging.info(f"Maximum runtime of {MAX_RUNTIME_HOURS} hours reached. Exiting.")
+            break
+
+if __name__ == "__main__":
+    main()

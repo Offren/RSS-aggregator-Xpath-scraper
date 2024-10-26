@@ -1,0 +1,10 @@
+{"model":"claude-3-5-sonnet-20240620","provider":"anthropic","promptTokens":448,"generatedTokens":133}
+{"model":"codestral-latest","provider":"mistral","promptTokens":431,"generatedTokens":10}
+{"model":"codestral-latest","provider":"mistral","promptTokens":432,"generatedTokens":22}
+{"model":"codestral-latest","provider":"mistral","promptTokens":459,"generatedTokens":0}
+{"model":"codestral-latest","provider":"mistral","promptTokens":460,"generatedTokens":11}
+{"model":"codestral-latest","provider":"mistral","promptTokens":459,"generatedTokens":6}
+{"model":"codestral-latest","provider":"mistral","promptTokens":459,"generatedTokens":0}
+{"model":"codestral-latest","provider":"mistral","promptTokens":458,"generatedTokens":11}
+{"model":"codestral-latest","provider":"mistral","promptTokens":919,"generatedTokens":1507}
+{"model":"codestral-latest","provider":"mistral","promptTokens":777,"generatedTokens":0}

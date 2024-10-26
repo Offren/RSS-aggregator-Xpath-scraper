@@ -1,0 +1,111 @@
+import feedparser
+import requests
+from lxml import html
+import logging
+from typing import List, Dict, Any
+import time
+import random
+import urllib.parse
+
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Constants
+RSS_URL = 'https://politepol.com/fd/KC5aCOn6Jefb.xml'
+XPATH = '/html/body/main/div/div[1]/div/section/article/div[1]/div[2]/a/@href'
+BASE_URL = 'https://www.gamerpower.com'
+MAX_ENTRIES = 10
+MAX_RETRIES = 3
+RETRY_DELAY = 5
+
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.101 Safari/537.36'
+]
+
+def get_headers() -> Dict[str, str]:
+    return {
+        'User-Agent': random.choice(USER_AGENTS),
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+    }
+
+def fetch_url_with_retry(url: str) -> requests.Response:
+    for attempt in range(MAX_RETRIES):
+        try:
+            headers = get_headers()
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            return response
+        except requests.RequestException as e:
+            logging.warning(f"Attempt {attempt + 1} failed for {url}: {e}")
+            if attempt < MAX_RETRIES - 1:
+                time.sleep(RETRY_DELAY)
+            else:
+                raise
+    return requests.Response()  # Return an empty response if all retries fail
+
+def parse_rss_and_extract_xpath() -> List[Dict[str, Any]]:
+    logging.info(f"Parsing RSS feed: {RSS_URL}")
+    feed = feedparser.parse(RSS_URL)
+
+    if not feed.entries:
+        logging.warning("No entries found in the RSS feed.")
+        return []
+
+    results = []
+    for entry in feed.entries[:MAX_ENTRIES]:
+        url = entry.get('link')
+        if not url:
+            logging.warning(f"Entry does not have a link: {entry.get('title', 'Untitled')}")
+            continue
+
+        logging.info(f"Processing entry: {url}")
+
+        try:
+            response = fetch_url_with_retry(url)
+            logging.info(f"Successfully fetched content from {url}")
+
+            tree = html.fromstring(response.content)
+            elements = tree.xpath(XPATH)
+
+            if elements:
+                content = elements[0]  # Get the first matching element
+                # Append BASE_URL to the content if it's a relative URL
+                full_url = urllib.parse.urljoin(BASE_URL, content)
+                results.append({
+                    'title': entry.get('title', 'Untitled'),
+                    'description': entry.get('description', '')[:500] + '...',
+                    'link': full_url
+                })
+                logging.info(f"Found matching content using XPath for {url}")
+            else:
+                logging.warning(f"No content found using XPath for {url}")
+
+        except requests.RequestException as e:
+            logging.error(f"Error fetching {url}: {e}")
+        except Exception as e:
+            logging.error(f"Error processing {url}: {e}")
+
+    return results
+
+def main():
+    logging.info("Starting content extraction process")
+    results = parse_rss_and_extract_xpath()
+
+    if results:
+        for item in results:
+            print(f"Title: {item['title']}")
+            print(f"Description: {item['description']}")
+            print(f"Link: {item['link']}")
+            print("-" * 50)
+    else:
+        logging.warning("No matching content found in the processed feed")
+
+if __name__ == "__main__":
+    main()

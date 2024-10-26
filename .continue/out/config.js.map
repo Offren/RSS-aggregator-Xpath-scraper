@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../config.ts"],
+  "sourcesContent": ["export function modifyConfig(config: Config): Config {\n  return config;\n}"],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;AAAA;AAAA;AAAA;AAAA;AAAA;AAAO,SAAS,aAAa,QAAwB;AACnD,SAAO;AACT;",
+  "names": []
+}
